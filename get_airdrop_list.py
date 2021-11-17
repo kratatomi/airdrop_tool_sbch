@@ -16,7 +16,8 @@ LP_CA_list = ["0x2E1d09EC90b5176B5f24A356C6c4F70cc9eb14f5",
               "0x3a5d0403a93C2D6ef6eb5b588aecB66FEc558D2e",
               "0x83c6f66b870667a967DbC40dd287ab92B3294A67",
               "0xAe2E976AF611A9e5E088fde5bC65e705d1a83e46",
-              "0x7627690DBBCC4d9bfC8b898526Bed2E26c82AC72"
+              "0x7627690DBBCC4d9bfC8b898526Bed2E26c82AC72",
+              "0xD0fFCA51dE13aE28FD43D81626F4dCAFB9ae8AA3"
               ]  # LP tokens address list added manually.
 
 
