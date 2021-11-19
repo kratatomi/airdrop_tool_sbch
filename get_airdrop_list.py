@@ -1,5 +1,10 @@
 import json
 from web3 import Web3
+import sys
+import warnings
+
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
 
 w3 = Web3(Web3.HTTPProvider('https://smartbch.fountainhead.cash/mainnet'))
 target_token_address = w3.toChecksumAddress(
@@ -7,19 +12,28 @@ target_token_address = w3.toChecksumAddress(
 ignored_addresses = []  # For example, admin wallet. The program will addresses usually related to allowance.
 address_list = []
 balances = {}
-amount_to_share = 1  # Amount of tokens to be airdropped
+amount_to_share = 1  # Amount of tokens or BCH to be airdropped.
 airdrop_threshold = 10  # Amount of tokens one address must hold the get an airdrop.
-LP_CA_list = ["0x2E1d09EC90b5176B5f24A356C6c4F70cc9eb14f5",
-              "0x0296A50808Ef2817946A46456d1369c024A70d08",
-              "0x6E6B4947A00243791CA490b41eBE4F338E20BFCA",
-              "0xD6EcaDB40b35D17f739Ec27285759d0ca119e3A1",
-              "0x3a5d0403a93C2D6ef6eb5b588aecB66FEc558D2e",
-              "0x83c6f66b870667a967DbC40dd287ab92B3294A67",
-              "0xAe2E976AF611A9e5E088fde5bC65e705d1a83e46",
-              "0x7627690DBBCC4d9bfC8b898526Bed2E26c82AC72",
-              "0xD0fFCA51dE13aE28FD43D81626F4dCAFB9ae8AA3"
-              ]  # LP tokens address list added manually.
+LP_CA_list = []  # Liquidity pools address list will be added by the app, you can add manually if anyone is missing.
+lp_factories = {"benswap": {"address": "0x8d973bAD782c1FFfd8FcC9d7579542BA7Dd0998D", "start_block": 295042},
+                "mist": {"address": "0x6008247F53395E7be698249770aa1D2bfE265Ca0", "start_block": 989302},
+                "muesliswap": {"address": "0x72cd8c0B5169Ff1f337E2b8F5b121f8510b52117", "start_block": 770000}} # Factories for every DEX
 
+createPair_topic = ["0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"]
+
+def get_liquidity_pools():
+    ABI = open("UniswapV2Factory.json", "r")  # Standard ABI for LP factories
+    abi = json.loads(ABI.read())
+    for factory in lp_factories:
+        factory_contract = w3.eth.contract(address=lp_factories[factory]["address"], abi=abi)
+        logs = w3.eth.get_logs({'topic': createPair_topic, 'address': lp_factories[factory]["address"],
+                                'fromBlock': lp_factories[factory]["start_block"]})
+        for i in range(len(logs)):
+            tx_hash = logs[i].transactionHash
+            receipt = w3.eth.getTransactionReceipt(tx_hash)
+            pair = factory_contract.events.PairCreated().processReceipt(receipt)
+            if pair[0].args.token0 == target_token_address or pair[0].args.token1 == target_token_address:
+                LP_CA_list.append(pair[0].args.pair)
 
 def get_LPs_info(LP_CA_list, target_token_address):
     ABI = open("UniswapV2Pair.json", "r")  # Standard ABI for LP tokens
@@ -71,7 +85,7 @@ def address_tracker(data):
 
     return addresses_owning_LPs
 
-def get_LP_balances(addresses_owning_LPs):
+def get_LP_balances(addresses_owning_LPs, LPs_dict):
     for LP_address in addresses_owning_LPs:
         ABI = open("UniswapV2Pair.json", "r")  # Standard ABI for LP tokens
         abi = json.loads(ABI.read())
@@ -114,15 +128,23 @@ def airdrop_list(balances, amount_to_share, total_token_amount):
     airdrop_list_file.close()
     print("Done, airdrop list available in airdrop_list.txt")
 
-try:
-    file = open("transfer_events.json", "r")
-    transfer_data = json.load(file)
-except FileNotFoundError:
-    print("File with contract events doesn't exist")
+def main():
+    try:
+        file = open("transfer_events.json", "r")
+        transfer_data = json.load(file)
+    except FileNotFoundError:
+        print("File with contract events doesn't exist")
+    print("Getting liquidity pools for your token, this may take a while")
+    get_liquidity_pools()
+    print("Just for your information, these are the liquidity pools for yout token:")
+    print(LP_CA_list)
+    print("Now getting all balances, please be patient")
+    LPs_dict = get_LPs_info(LP_CA_list, target_token_address)
+    addresses_owning_LPs = address_tracker(transfer_data)
+    get_LP_balances(addresses_owning_LPs, LPs_dict)
+    total_token_amount = get_balances(airdrop_threshold)
+    print("Making the airdrop list")
+    airdrop_list(balances, amount_to_share, total_token_amount)
 
-LPs_dict = get_LPs_info(LP_CA_list, target_token_address)
-addresses_owning_LPs = address_tracker(transfer_data)
-get_LP_balances(addresses_owning_LPs)
-total_token_amount = get_balances(airdrop_threshold)
-airdrop_list(balances, amount_to_share, total_token_amount)
-
+if __name__== "__main__":
+    main()
