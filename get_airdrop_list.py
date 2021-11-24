@@ -17,7 +17,8 @@ airdrop_threshold = 10  # Amount of tokens one address must hold the get an aird
 LP_CA_list = []  # Liquidity pools address list will be added by the app, you can add manually if anyone is missing.
 lp_factories = {"benswap": {"address": "0x8d973bAD782c1FFfd8FcC9d7579542BA7Dd0998D", "start_block": 295042},
                 "mist": {"address": "0x6008247F53395E7be698249770aa1D2bfE265Ca0", "start_block": 989302},
-                "muesliswap": {"address": "0x72cd8c0B5169Ff1f337E2b8F5b121f8510b52117", "start_block": 770000}} # Factories for every DEX
+                "muesliswap": {"address": "0x72cd8c0B5169Ff1f337E2b8F5b121f8510b52117", "start_block": 770000},
+                "tangoswap": {"address": "0x2F3f70d13223EDDCA9593fAC9fc010e912DF917a", "start_block": 1787259}} # Factories for every DEX
 
 createPair_topic = ["0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"]
 
@@ -136,7 +137,7 @@ def main():
         print("File with contract events doesn't exist")
     print("Getting liquidity pools for your token, this may take a while")
     get_liquidity_pools()
-    print("Just for your information, these are the liquidity pools for yout token:")
+    print("Just for your information, these are the liquidity pools for your token:")
     print(LP_CA_list)
     print("Now getting all balances, please be patient")
     LPs_dict = get_LPs_info(LP_CA_list, target_token_address)
