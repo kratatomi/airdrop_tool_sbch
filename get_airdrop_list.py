@@ -21,6 +21,7 @@ lp_factories = {"benswap": {"address": "0x8d973bAD782c1FFfd8FcC9d7579542BA7Dd099
                 "tangoswap": {"address": "0x2F3f70d13223EDDCA9593fAC9fc010e912DF917a", "start_block": 1787259}} # Factories for every DEX
 
 createPair_topic = ["0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"]
+farms = ["0xDEa721EFe7cBC0fCAb7C8d65c598b21B6373A2b6"] # Master contracts
 
 def get_liquidity_pools():
     ABI = open("UniswapV2Factory.json", "r")  # Standard ABI for LP factories
@@ -59,7 +60,6 @@ def get_LPs_info(LP_CA_list, target_token_address):
         }
     return LPs_dict
 
-
 def address_tracker(data):
     addresses_owning_LPs = {k: [] for k in LP_CA_list}  # Dictionary containing LP_address:[owners list] elements
     for block_number in data["blocks"]:
@@ -86,7 +86,23 @@ def address_tracker(data):
 
     return addresses_owning_LPs
 
-def get_LP_balances(addresses_owning_LPs, LPs_dict):
+def get_farms(LP_CA_list, addresses_owning_LPs):
+    LPs_in_farms = {} # LP_address: [(user_address1: LP_amount1), (user_address2: LP_amount2)...]
+    ABI = open("Master-ABI.json", "r")
+    abi = json.loads(ABI.read())
+    for master_contract in farms:
+        contract = w3.eth.contract(address=w3.toChecksumAddress(master_contract), abi=abi)
+        pool_length = contract.functions.poolLength().call()
+        for i in range(pool_length):
+            if contract.functions.poolInfo(i).call()[0] in LP_CA_list:
+                LPs_in_farms[contract.functions.poolInfo(i).call()[0]] = []
+                for address in address_list:
+                    LP_amount = contract.functions.userInfo(i,address).call()[0]
+                    if LP_amount != 0:
+                        LPs_in_farms[contract.functions.poolInfo(i).call()[0]].append((address, LP_amount))
+    return LPs_in_farms
+
+def get_LP_balances(addresses_owning_LPs, LPs_dict, LPs_in_farms):
     for LP_address in addresses_owning_LPs:
         ABI = open("UniswapV2Pair.json", "r")  # Standard ABI for LP tokens
         abi = json.loads(ABI.read())
@@ -96,6 +112,15 @@ def get_LP_balances(addresses_owning_LPs, LPs_dict):
             if address_LP_balance != 0 and address not in ignored_addresses:
                 balances[address] = (address_LP_balance / LPs_dict[LP_address]["total_supply"]) * LPs_dict[LP_address][
                     "target_token_reserve"]
+        if LP_address in LPs_in_farms:
+            for i in range(len(LPs_in_farms[LP_address])):
+                owner = LPs_in_farms[LP_address][i][0]
+                balance = (LPs_in_farms[LP_address][i][1] / LPs_dict[LP_address]["total_supply"]) * LPs_dict[LP_address]["target_token_reserve"]
+                if owner in balances: # In this case, the owner holds LP in his/her wallet
+                    balances[owner] += balance
+                else:
+                    balances[owner] = balance
+
 
 
 def get_balances(airdrop_threshold):
@@ -139,10 +164,12 @@ def main():
     get_liquidity_pools()
     print("Just for your information, these are the liquidity pools for your token:")
     print(LP_CA_list)
-    print("Now getting all balances, please be patient")
     LPs_dict = get_LPs_info(LP_CA_list, target_token_address)
     addresses_owning_LPs = address_tracker(transfer_data)
-    get_LP_balances(addresses_owning_LPs, LPs_dict)
+    print("Scanning for farms...")
+    LPs_in_farms = get_farms(LP_CA_list, addresses_owning_LPs)
+    get_LP_balances(addresses_owning_LPs, LPs_dict, LPs_in_farms)
+    print("Now getting all balances, please be patient")
     total_token_amount = get_balances(airdrop_threshold)
     print("Making the airdrop list")
     airdrop_list(balances, amount_to_share, total_token_amount)
