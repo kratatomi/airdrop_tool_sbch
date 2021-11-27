@@ -21,7 +21,11 @@ lp_factories = {"benswap": {"address": "0x8d973bAD782c1FFfd8FcC9d7579542BA7Dd099
                 "tangoswap": {"address": "0x2F3f70d13223EDDCA9593fAC9fc010e912DF917a", "start_block": 1787259}} # Factories for every DEX
 
 createPair_topic = ["0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"]
-farms = ["0xDEa721EFe7cBC0fCAb7C8d65c598b21B6373A2b6"] # Master contracts
+farms = {"PANCAKE": ["0xDEa721EFe7cBC0fCAb7C8d65c598b21B6373A2b6"], #Benswap
+         "SUSHI": ["0x3A7B9D0ed49a90712da4E087b17eE4Ac1375a5D4", #Mistswap
+                   "0x4856BB1a11AF5514dAA0B0DC8Ca630671eA9bf56", #Muesli
+                   "0x38cC060DF3a0498e978eB756e44BD43CC4958aD9"] #Tangoswap
+         } # Master contracts
 
 def get_liquidity_pools():
     ABI = open("UniswapV2Factory.json", "r")  # Standard ABI for LP factories
@@ -88,18 +92,25 @@ def address_tracker(data):
 
 def get_farms(LP_CA_list, addresses_owning_LPs):
     LPs_in_farms = {} # LP_address: [(user_address1: LP_amount1), (user_address2: LP_amount2)...]
-    ABI = open("Master-ABI.json", "r")
-    abi = json.loads(ABI.read())
-    for master_contract in farms:
-        contract = w3.eth.contract(address=w3.toChecksumAddress(master_contract), abi=abi)
-        pool_length = contract.functions.poolLength().call()
-        for i in range(pool_length):
-            if contract.functions.poolInfo(i).call()[0] in LP_CA_list:
-                LPs_in_farms[contract.functions.poolInfo(i).call()[0]] = []
-                for address in address_list:
-                    LP_amount = contract.functions.userInfo(i,address).call()[0]
-                    if LP_amount != 0:
-                        LPs_in_farms[contract.functions.poolInfo(i).call()[0]].append((address, LP_amount))
+    PCK_ABI_FILE = open("PCK-Master-ABI.json", "r")
+    PCK_abi = json.loads(PCK_ABI_FILE.read())
+    SUSHI_ABI_FILE = open("SUSHI-Master-ABI.json", "r")
+    SUSHI_abi = json.loads(SUSHI_ABI_FILE.read())
+    for dex_base in farms:
+        if dex_base == "PANCAKE":
+            abi = PCK_abi
+        if dex_base == "SUSHI":
+            abi = SUSHI_abi
+        for master_contract in farms[dex_base]:
+            contract = w3.eth.contract(address=w3.toChecksumAddress(master_contract), abi=abi)
+            pool_length = contract.functions.poolLength().call()
+            for i in range(pool_length):
+                if contract.functions.poolInfo(i).call()[0] in LP_CA_list:
+                    LPs_in_farms[contract.functions.poolInfo(i).call()[0]] = []
+                    for address in address_list:
+                        LP_amount = contract.functions.userInfo(i,address).call()[0]
+                        if LP_amount != 0:
+                            LPs_in_farms[contract.functions.poolInfo(i).call()[0]].append((address, LP_amount))
     return LPs_in_farms
 
 def get_LP_balances(addresses_owning_LPs, LPs_dict, LPs_in_farms):
