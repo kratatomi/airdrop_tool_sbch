@@ -432,7 +432,7 @@ if __name__ == "__main__":
     TOKEN_ADDRESS = "0x3d13DaFcCA3a188DB340c81414239Bc2be312Ec9"
 
     # Load standard ERC20 ABI from file
-    ABI = open("ERC20-ABI.json", "r")
+    ABI = open("ABIs/ERC20-ABI.json", "r")
 
     class JSONifiedState(EventScannerState):
         """Store the state of scanned blocks and all events.
