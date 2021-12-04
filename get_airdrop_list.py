@@ -9,7 +9,7 @@ if not sys.warnoptions:
 w3 = Web3(Web3.HTTPProvider('https://smartbch.fountainhead.cash/mainnet'))
 target_token_address = w3.toChecksumAddress(
     "0x3d13DaFcCA3a188DB340c81414239Bc2be312Ec9")  # In this case, AxieBCH address
-ignored_addresses = []  # For example, admin wallet. The program will detect addresses usually related to allowance.
+ignored_addresses = ['0x0000000000000000000000000000000000000000']  # For example, admin wallet or burner address.
 address_list = []
 balances = {}
 amount_to_share = 1  # Amount of tokens or BCH to be airdropped.
@@ -75,7 +75,7 @@ def address_tracker(data):
                     address_list.append(data["blocks"][block_number][txhash][tx]["to"])
                 if data["blocks"][block_number][txhash][tx]["from"] not in address_list and \
                         data["blocks"][block_number][txhash][tx]["from"] not in ignored_addresses:
-                    ignored_addresses.append(data["blocks"][block_number][txhash][tx]["from"])
+                    address_list.append(data["blocks"][block_number][txhash][tx]["from"])
                 if data["blocks"][block_number][txhash][tx]["to"] in addresses_owning_LPs.keys():
                     if data["blocks"][block_number][txhash][tx]["from"] not in addresses_owning_LPs[
                         data["blocks"][block_number][txhash][tx]["to"]]:
