@@ -9,7 +9,7 @@ if not sys.warnoptions:
 w3 = Web3(Web3.HTTPProvider('https://smartbch.fountainhead.cash/mainnet'))
 target_token_address = w3.toChecksumAddress(
     "0x3d13DaFcCA3a188DB340c81414239Bc2be312Ec9")  # In this case, AxieBCH address
-ignored_addresses = ['0x0000000000000000000000000000000000000000']  # For example, admin wallet or burner address.
+ignored_addresses = [target_token_address, '0x0000000000000000000000000000000000000000']  # For example, admin wallet or burner address.
 address_list = []
 balances = {}
 amount_to_share = 1  # Amount of tokens or BCH to be airdropped.
@@ -143,25 +143,47 @@ def get_LP_balances(addresses_owning_LPs, LPs_dict, LPs_in_farms):
 
 def get_balances(airdrop_threshold):
     total_token_amount: int = 0
-    ABI = open("ABIs/ERC20-ABI.json", "r")  # Standard ABI for ERC20 tokens
-    abi = json.loads(ABI.read())
-    contract = w3.eth.contract(address=target_token_address, abi=abi)
-    decimals = contract.functions.decimals().call()
-    airdrop_threshold = airdrop_threshold * 10 ** decimals
-    for address in address_list:
-        balance = contract.functions.balanceOf(address).call()
-        if address in balances: # In this case, the address holds tokens in LP contract
-            balances[address] += balance  # Add balance from the LP tokens
-            if balances[address] >= airdrop_threshold:
-                total_token_amount += balances[address]
+    if target_token_address == "0x7642Df81b5BEAeEb331cc5A104bd13Ba68c34B91": # Celery contract address
+        ABI = open("ABIs/CLY-ABI.json", "r")
+        abi = json.loads(ABI.read())
+        contract = w3.eth.contract(address=target_token_address, abi=abi)
+        decimals = contract.functions.decimals().call()
+        airdrop_threshold = airdrop_threshold * 10 ** decimals
+        for address in address_list:
+            wallet_balance = contract.functions.balanceOf(address).call()  # Neither in stacking or payout mode
+            account_balance = contract.functions.getAccountBalance(address).call()  # Either in staking or payout mode
+            balance = wallet_balance + account_balance
+            if address in balances:  # In this case, the address holds tokens in LP contract
+                balances[address] += balance  # Add balance from the LP tokens
+                if balances[address] >= airdrop_threshold:
+                    total_token_amount += balances[address]
+                else:
+                    balances.pop(address)
             else:
-                balances.pop(address)
-        else:
-            if balance >= airdrop_threshold:
-                balances[address] = balance
-                total_token_amount += balance
+                if balance >= airdrop_threshold:
+                    balances[address] = balance
+                    total_token_amount += balance
+        return total_token_amount
+    else:
+        ABI = open("ABIs/ERC20-ABI.json", "r")  # Standard ABI for ERC20 tokens
+        abi = json.loads(ABI.read())
+        contract = w3.eth.contract(address=target_token_address, abi=abi)
+        decimals = contract.functions.decimals().call()
+        airdrop_threshold = airdrop_threshold * 10 ** decimals
+        for address in address_list:
+            balance = contract.functions.balanceOf(address).call()
+            if address in balances: # In this case, the address holds tokens in LP contract
+                balances[address] += balance  # Add balance from the LP tokens
+                if balances[address] >= airdrop_threshold:
+                    total_token_amount += balances[address]
+                else:
+                    balances.pop(address)
+            else:
+                if balance >= airdrop_threshold:
+                    balances[address] = balance
+                    total_token_amount += balance
 
-    return total_token_amount
+        return total_token_amount
 
 def airdrop_list(balances, amount_to_share, total_token_amount):
     airdrop = {}
