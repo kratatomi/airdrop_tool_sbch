@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="26b44cb3-63d2-4278-a1dd-a550a33ef1c3" name="Changes" comment="Corrected a bug that ignores legit addresses.">
-      <change afterPath="$PROJECT_DIR$/ABIs/CLY-ABI.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/get_airdrop_list.py" beforeDir="false" afterPath="$PROJECT_DIR$/get_airdrop_list.py" afterDir="false" />
-    </list>
+    <list default="true" id="26b44cb3-63d2-4278-a1dd-a550a33ef1c3" name="Changes" comment="Add .idea folder to .gitignore" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -71,7 +68,28 @@
       <option name="project" value="LOCAL" />
       <updated>1638631231749</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Add support for CLY token.">
+      <created>1638809882504</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1638809882504</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Add support for CLY token.">
+      <created>1638809902475</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1638809902475</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Add .idea folder to .gitignore">
+      <created>1638810087681</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1638810087681</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -89,6 +107,8 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="Added support for 1BCH DEX" />
     <MESSAGE value="Corrected a bug that ignores legit addresses." />
-    <option name="LAST_COMMIT_MESSAGE" value="Corrected a bug that ignores legit addresses." />
+    <MESSAGE value="Add support for CLY token." />
+    <MESSAGE value="Add .idea folder to .gitignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add .idea folder to .gitignore" />
   </component>
 </project>
