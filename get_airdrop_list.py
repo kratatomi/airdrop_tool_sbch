@@ -2,6 +2,7 @@ import json
 from web3 import Web3
 import sys
 import warnings
+from time import time
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -19,11 +20,13 @@ lp_factories = {"benswap": {"address": "0x8d973bAD782c1FFfd8FcC9d7579542BA7Dd099
                 "mist": {"address": "0x6008247F53395E7be698249770aa1D2bfE265Ca0", "start_block": 989302},
                 "muesliswap": {"address": "0x72cd8c0B5169Ff1f337E2b8F5b121f8510b52117", "start_block": 770000},
                 "tangoswap": {"address": "0x2F3f70d13223EDDCA9593fAC9fc010e912DF917a", "start_block": 1787259},
-                "1BCH": {"address": "0x3dC4e6aC26df957a908cfE1C0E6019545D08319b", "start_block": 1890341}} # Factories for every DEX
+                "1BCH": {"address": "0x3dC4e6aC26df957a908cfE1C0E6019545D08319b", "start_block": 1890341},
+                "tropical": {"address": "0x138504000feaEd02AD75B1e8BDb904f51C445F4C", "start_block": 2127480}} # Factories for every DEX
 
 createPair_topic = ["0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"]
 farms = {"BEN": ["0xDEa721EFe7cBC0fCAb7C8d65c598b21B6373A2b6"], #Benswap
-         "PANCAKE": ["0xeC0A7496e66a206181034F86B261DDDC1A2c406E"], #1BCH
+         "PANCAKE": ["0xeC0A7496e66a206181034F86B261DDDC1A2c406E",  #1BCH
+                     "0xE4D74Af73114F72bD0172fc7904852Ee2E2b47B0"], #Tropical
          "SUSHI": ["0x3A7B9D0ed49a90712da4E087b17eE4Ac1375a5D4", #Mistswap
                    "0x4856BB1a11AF5514dAA0B0DC8Ca630671eA9bf56", #Muesli
                    "0x38cC060DF3a0498e978eB756e44BD43CC4958aD9"] #Tangoswap
@@ -115,9 +118,16 @@ def get_farms(LP_CA_list, addresses_owning_LPs):
                 if contract.functions.poolInfo(i).call()[0] in LP_CA_list:
                     LPs_in_farms[contract.functions.poolInfo(i).call()[0]] = []
                     for address in address_list:
-                        LP_amount = contract.functions.userInfo(i,address).call()[0]
+                        LP_amount = contract.functions.userInfo(i, address).call()[0]
                         if LP_amount != 0:
                             LPs_in_farms[contract.functions.poolInfo(i).call()[0]].append((address, LP_amount))
+                if contract.functions.poolInfo(i).call()[0] == target_token_address: # This is a single token pool
+                    for address in address_list:
+                        token_balance = contract.functions.userInfo(i, address).call()[0]
+                        if token_balance != 0:
+                            balances[address] = token_balance
+
+
     return LPs_in_farms
 
 def get_LP_balances(addresses_owning_LPs, LPs_dict, LPs_in_farms):
@@ -127,7 +137,10 @@ def get_LP_balances(addresses_owning_LPs, LPs_dict, LPs_in_farms):
         contract = w3.eth.contract(address=LP_address, abi=abi)
         for address in addresses_owning_LPs[LP_address]:
             address_LP_balance = contract.functions.balanceOf(w3.toChecksumAddress(address)).call()
-            if address_LP_balance != 0 and address not in ignored_addresses:
+            if address_LP_balance != 0 and address not in ignored_addresses and address in balances: # This means this wallet holds single stacking pool
+                balances[address] += (address_LP_balance / LPs_dict[LP_address]["total_supply"]) * LPs_dict[LP_address][
+                    "target_token_reserve"]
+            if address_LP_balance != 0 and address not in ignored_addresses and address not in balances:
                 balances[address] = (address_LP_balance / LPs_dict[LP_address]["total_supply"]) * LPs_dict[LP_address][
                     "target_token_reserve"]
         if LP_address in LPs_in_farms:
@@ -150,8 +163,16 @@ def get_balances(airdrop_threshold):
         decimals = contract.functions.decimals().call()
         airdrop_threshold = airdrop_threshold * 10 ** decimals
         for address in address_list:
+            account_balance = 0
             wallet_balance = contract.functions.balanceOf(address).call()  # Neither in stacking or payout mode
-            account_balance = contract.functions.getAccountBalance(address).call()  # Either in staking or payout mode
+            account_status = contract.functions.getStatus(address).call
+            if account_status == 0: # Payout mode
+                account_balance += contract.functions.getAccountBalance(address).call()
+            if account_status == 1: # Stacking mode
+                last_processed_time = contract.functions.getLastProcessedTime(address).call()
+                delta = int(time()) - last_processed_time
+                year_percentage = delta / 31536000  # Seconds in a year
+                account_balance += 2 ** year_percentage * contract.functions.getAccountBalance(portfolio_address).call()
             balance = wallet_balance + account_balance
             if address in balances:  # In this case, the address holds tokens in LP contract
                 balances[address] += balance  # Add balance from the LP tokens
