@@ -7,7 +7,9 @@ from time import time
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
 
-w3 = Web3(Web3.HTTPProvider('https://smartbch.fountainhead.cash/mainnet'))
+w3 = Web3(Web3.HTTPProvider('https://smartbch.greyh.at'))
+if not w3.isConnected():
+    w3 = Web3(Web3.HTTPProvider('https://smartbch.fountainhead.cash/mainnet'))
 target_token_address = w3.toChecksumAddress(
     "0x3d13DaFcCA3a188DB340c81414239Bc2be312Ec9")  # In this case, AxieBCH address
 ignored_addresses = [target_token_address, '0x0000000000000000000000000000000000000000']  # For example, admin wallet or burner address.
