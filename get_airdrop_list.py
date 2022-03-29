@@ -187,6 +187,38 @@ def get_balances(airdrop_threshold):
                     balances[address] = balance
                     total_token_amount += balance
         return total_token_amount
+    if target_token_address == "0x9192940099fDB2338B928DE2cad9Cd1525fEa881": # BPAD contract address
+        #First, we will get staked tokens
+        ABI = open("ABIs/BPADPoolABI.json", "r")  # Standard ABI for ERC20 tokens
+        abi = json.loads(ABI.read())
+        contract = w3.eth.contract(address="0xc39f046a0E2d081e2D01558269D1e3720D2D2EA1", abi=abi)
+        for address in address_list:
+            amount, rewardDebt = contract.functions.userInfo(address).call()
+            balance = amount + rewardDebt
+            if address in balances: # In this case, the address holds tokens in LP contract
+                balances[address] += balance
+                total_token_amount += balances[address]
+            else:
+                balances[address] = balance
+                total_token_amount += balance
+        #Now, let's check balances in every wallet
+        ABI = open("ABIs/ERC20-ABI.json", "r")  # Standard ABI for ERC20 tokens
+        abi = json.loads(ABI.read())
+        contract = w3.eth.contract(address=target_token_address, abi=abi)
+        decimals = contract.functions.decimals().call()
+        airdrop_threshold = airdrop_threshold * 10 ** decimals
+        for address in address_list:
+            balance = contract.functions.balanceOf(address).call()
+            if address in balances: # In this case, the address holds tokens in LP contract
+                balances[address] += balance  # Add balance from the LP tokens
+                if balances[address] >= airdrop_threshold:
+                    total_token_amount += balances[address]
+                else:
+                    balances.pop(address)
+            else:
+                if balance >= airdrop_threshold:
+                    balances[address] = balance
+                    total_token_amount += balance
     else:
         ABI = open("ABIs/ERC20-ABI.json", "r")  # Standard ABI for ERC20 tokens
         abi = json.loads(ABI.read())
