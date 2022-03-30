@@ -196,7 +196,7 @@ def get_balances(airdrop_threshold):
         contract = w3.eth.contract(address="0xc39f046a0E2d081e2D01558269D1e3720D2D2EA1", abi=abi)
         for address in address_list:
             amount, rewardDebt = contract.functions.userInfo(address).call()
-            balance = amount + rewardDebt
+            balance = int(amount) + int(rewardDebt)
             if address in balances: # In this case, the address holds tokens in LP contract
                 balances[address] += balance
                 total_token_amount += balances[address]
@@ -211,8 +211,8 @@ def get_balances(airdrop_threshold):
         airdrop_threshold = airdrop_threshold * 10 ** decimals
         for address in address_list:
             balance = contract.functions.balanceOf(address).call()
-            if address in balances: # In this case, the address holds tokens in LP contract
-                balances[address] += balance  # Add balance from the LP tokens
+            if address in balances:
+                balances[address] += balance
                 if balances[address] >= airdrop_threshold:
                     total_token_amount += balances[address]
                 else:
@@ -240,7 +240,7 @@ def get_balances(airdrop_threshold):
                     balances[address] = balance
                     total_token_amount += balance
 
-        return total_token_amount
+    return total_token_amount
 
 def airdrop_list(balances, amount_to_share, total_token_amount):
     airdrop = {}
@@ -269,6 +269,7 @@ def main():
     print("Now getting all balances, please be patient")
     total_token_amount = get_balances(airdrop_threshold)
     print("Making the airdrop list")
+    print(f"Total token amount is {total_token_amount}")
     airdrop_list(balances, amount_to_share, total_token_amount)
 
 if __name__== "__main__":
