@@ -269,7 +269,6 @@ def main():
     print("Now getting all balances, please be patient")
     total_token_amount = get_balances(airdrop_threshold)
     print("Making the airdrop list")
-    print(f"Total token amount is {total_token_amount}")
     airdrop_list(balances, amount_to_share, total_token_amount)
 
 if __name__== "__main__":
