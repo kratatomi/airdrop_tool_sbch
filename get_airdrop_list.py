@@ -11,8 +11,8 @@ w3 = Web3(Web3.HTTPProvider('https://smartbch.greyh.at'))
 if not w3.isConnected():
     w3 = Web3(Web3.HTTPProvider('https://smartbch.fountainhead.cash/mainnet'))
 target_token_address = w3.toChecksumAddress(
-    "0x3d13DaFcCA3a188DB340c81414239Bc2be312Ec9")  # In this case, AxieBCH address
-ignored_addresses = [target_token_address, '0x0000000000000000000000000000000000000000']  # For example, admin wallet or burner address.
+    "0xF05bD3d7709980f60CD5206BddFFA8553176dd29")  # In this case, SIDX contract address
+ignored_addresses = [target_token_address, '0x0000000000000000000000000000000000000000', '0xd11bb6a7981780aADc722146a306f7104fD93E9c']  # For example, admin wallet or burner address.
 address_list = []
 balances = {}
 amount_to_share = 1  # Amount of tokens or BCH to be airdropped.
@@ -20,12 +20,12 @@ airdrop_threshold = 10  # Amount of tokens one address must hold the get an aird
 LP_CA_list = []  # Liquidity pools address list will be added by the app, you can add manually if anyone is missing.
 lp_factories = {"benswap": {"address": "0x8d973bAD782c1FFfd8FcC9d7579542BA7Dd0998D", "start_block": 295042},
                 "mist": {"address": "0x6008247F53395E7be698249770aa1D2bfE265Ca0", "start_block": 989302},
-                "muesliswap": {"address": "0x72cd8c0B5169Ff1f337E2b8F5b121f8510b52117", "start_block": 770000},
                 "tangoswap": {"address": "0x2F3f70d13223EDDCA9593fAC9fc010e912DF917a", "start_block": 1787259},
                 "1BCH": {"address": "0x3dC4e6aC26df957a908cfE1C0E6019545D08319b", "start_block": 1890341},
                 "tropical": {"address": "0x138504000feaEd02AD75B1e8BDb904f51C445F4C", "start_block": 2127480},
                 "smartdex": {"address": "0xDd749813a4561100bDD3F50079a07110d148EaF5", "start_block": 2503959},
-                "emberswap": {"address": "0xE62983a68679834eD884B9673Fb6aF13db740fF0", "start_block": 3157682}} # Factories for every DEX
+                "emberswap": {"address": "0xE62983a68679834eD884B9673Fb6aF13db740fF0", "start_block": 3157682},
+                "blockng": {"address": "0x3A2643c00171b1EA6f6b6EaC77b1E0DdB02c3a62", "start_block": 3622020}} # Factories for every DEX
 
 createPair_topic = ["0x0d3648bd0f6ba80134a33ba9275ac585d9d315f0ad8355cddefde31afa28d0e9"]
 

@@ -429,7 +429,7 @@ if __name__ == "__main__":
     # Token smart contract address on SmartBCH
     # Always use checksum format
     # https://etherscan.io/address/0x0fa0b4cc33d5a4f0ed073ca7f88259ab75c7a98b
-    TOKEN_ADDRESS = "0x3d13DaFcCA3a188DB340c81414239Bc2be312Ec9"
+    TOKEN_ADDRESS = "0xF05bD3d7709980f60CD5206BddFFA8553176dd29"
 
     # Load standard ERC20 ABI from file
     ABI = open("ABIs/ERC20-ABI.json", "r")
@@ -450,7 +450,7 @@ if __name__ == "__main__":
         def reset(self):
             """Create initial state of nothing scanned."""
             self.state = {
-                "last_scanned_block": 714671, #Block where the contract was deployed
+                "last_scanned_block": 1482274, #Block where the contract was deployed
                 "blocks": {},
             }
 
